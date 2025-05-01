@@ -1,5 +1,6 @@
 package com.example.nyusyukkin;
 
+import com.example.batch.file.OutputFileColumn;
 import java.util.Date;
 
 /**
@@ -10,31 +11,37 @@ public class NyusyukkinFileOutput {
 	/**
 	 * Transaction date.
 	 */
+	@OutputFileColumn(columnIndex = 0, columnFormat = "yyyyMMdd")
 	private Date torihikibi;
 
 	/**
 	 * Branch name.
 	 */
+	@OutputFileColumn(columnIndex = 1)
 	private String shitenName;
 
 	/**
 	 * Number of deposits.
 	 */
+	@OutputFileColumn(columnIndex = 2)
 	private int nyukinNum;
 
 	/**
 	 * Number of withdrawals.
 	 */
+	@OutputFileColumn(columnIndex = 3)
 	private int syukkinNum;
 
 	/**
 	 * Total deposits.
 	 */
+	@OutputFileColumn(columnIndex = 4)
 	private int nyukinSum;
 
 	/**
 	 * Total withdrawals.
 	 */
+	@OutputFileColumn(columnIndex = 5)
 	private int syukkinSum;
 
 	/**

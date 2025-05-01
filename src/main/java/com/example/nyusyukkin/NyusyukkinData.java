@@ -1,5 +1,7 @@
 package com.example.nyusyukkin;
 
+import com.example.batch.file.InputFileColumn;
+import com.example.batch.file.OutputFileColumn;
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Date;
 
@@ -11,27 +13,37 @@ public class NyusyukkinData {
 	/**
 	 * Branch name.
 	 */
+	@InputFileColumn(columnIndex = 0)
+	@OutputFileColumn(columnIndex = 0)
 	private String shitenName;
 
 	/**
 	 * Customer ID.
 	 */
+	@InputFileColumn(columnIndex = 1)
+	@OutputFileColumn(columnIndex = 1)
 	@NotEmpty
 	private String kokyakuId;
 
 	/**
 	 * Transaction type (0: withdrawal, 1: deposit).
 	 */
+	@InputFileColumn(columnIndex = 2)
+	@OutputFileColumn(columnIndex = 2)
 	private int nyusyukkinKubun;
 
 	/**
 	 * Transaction amount.
 	 */
+	@InputFileColumn(columnIndex = 3)
+	@OutputFileColumn(columnIndex = 3)
 	private int kingaku;
 
 	/**
 	 * Transaction date.
 	 */
+	@InputFileColumn(columnIndex = 4, columnFormat = "yyyyMMdd")
+	@OutputFileColumn(columnIndex = 4, columnFormat = "yyyyMMdd")
 	private Date torihikibi;
 
 	/**

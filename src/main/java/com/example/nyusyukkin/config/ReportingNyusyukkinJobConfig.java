@@ -1,9 +1,9 @@
 package com.example.nyusyukkin.config;
 
+import com.example.batch.file.InputFileColumnLineMapper;
+import com.example.batch.file.OutputFileColumnFieldExtractor;
 import com.example.nyusyukkin.NyusyukkinData;
-import com.example.nyusyukkin.NyusyukkinDataFieldSetMapper;
 import com.example.nyusyukkin.NyusyukkinFileOutput;
-import com.example.nyusyukkin.NyusyukkinFileOutputFieldExtractor;
 import com.example.nyusyukkin.ReportingNyusyukkinTasklet;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecutionListener;
@@ -32,14 +32,11 @@ public class ReportingNyusyukkinJobConfig {
 	@Bean
 	@StepScope
 	public FlatFileItemReader<NyusyukkinData> delegateNyusyukkinDataItemReader(
-			@Value("#{jobParameters['inputFile'] ?: 'https://github.com/terasoluna-batch/terasoluna-sample/raw/refs/heads/master/terasoluna-batch-tutorial/inputFile/SMP004_input.csv'}") Resource resource,
-			NyusyukkinDataFieldSetMapper fieldSetMapper) {
+			@Value("#{jobParameters['inputFile'] ?: 'https://github.com/terasoluna-batch/terasoluna-sample/raw/refs/heads/master/terasoluna-batch-tutorial/inputFile/SMP004_input.csv'}") Resource resource) {
 		return new FlatFileItemReaderBuilder<NyusyukkinData>().name("nyusyukkinItemReader")
 			.resource(resource)
 			.linesToSkip(0)
-			.delimited()
-			.names("shitenName", "kokyakuId", "nyusyukkinKubun", "kingaku", "torihikibi")
-			.fieldSetMapper(fieldSetMapper)
+			.lineMapper(new InputFileColumnLineMapper<>(NyusyukkinData.class, ","))
 			.encoding("Windows-31J")
 			.build();
 	}
@@ -54,15 +51,14 @@ public class ReportingNyusyukkinJobConfig {
 
 	@Bean
 	@StepScope
-	public FlatFileItemWriter<NyusyukkinFileOutput> nyusyukkinFileOutputItemWriter(
-			NyusyukkinFileOutputFieldExtractor fieldExtractor) {
+	public FlatFileItemWriter<NyusyukkinFileOutput> nyusyukkinFileOutputItemWriter() {
 		return new FlatFileItemWriterBuilder<NyusyukkinFileOutput>().name("nyusyukkinFileOutputItemWriter")
 			.resource(new FileSystemResource("outputFile/SMP004_output.csv"))
 			.encoding("Windows-31J")
 			.append(false)
 			.delimited()
 			.delimiter(",")
-			.fieldExtractor(fieldExtractor)
+			.fieldExtractor(new OutputFileColumnFieldExtractor<>(NyusyukkinFileOutput.class))
 			.build();
 	}
 

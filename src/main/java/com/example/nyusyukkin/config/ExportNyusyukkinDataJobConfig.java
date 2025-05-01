@@ -1,8 +1,8 @@
 package com.example.nyusyukkin.config;
 
+import com.example.batch.file.OutputFileColumnFieldExtractor;
 import com.example.nyusyukkin.NyusyukkinClassifier;
 import com.example.nyusyukkin.NyusyukkinData;
-import com.example.nyusyukkin.NyusyukkinDataFieldExtractor;
 import com.example.nyusyukkin.NyusyukkinMapper;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.batch.MyBatisCursorItemReader;
@@ -40,28 +40,27 @@ public class ExportNyusyukkinDataJobConfig {
 	// Writer for deposit transactions (nyusyukkinKubun == 0)
 	@Bean
 	@StepScope
-	public FlatFileItemWriter<NyusyukkinData> writerNyukin(NyusyukkinDataFieldExtractor fieldExtractor) {
+	public FlatFileItemWriter<NyusyukkinData> writerNyukin() {
 		return new FlatFileItemWriterBuilder<NyusyukkinData>().name("writerNyukin")
 			.resource(new FileSystemResource("outputFile/SMP001_output_nyukin.csv"))
 			.encoding("Windows-31J")
 			.append(false)
 			.delimited()
 			.delimiter(",")
-			.fieldExtractor(fieldExtractor)
+			.fieldExtractor(new OutputFileColumnFieldExtractor<>(NyusyukkinData.class))
 			.build();
 	}
 
 	// Writer for withdrawal transactions (nyusyukkinKubun == 1)
 	@Bean
 	@StepScope
-	public FlatFileItemWriter<NyusyukkinData> writerSyukkin(NyusyukkinDataFieldExtractor fieldExtractor) {
+	public FlatFileItemWriter<NyusyukkinData> writerSyukkin() {
 		return new FlatFileItemWriterBuilder<NyusyukkinData>().name("writerSyukkin")
 			.resource(new FileSystemResource("outputFile/SMP001_output_syukkin.csv"))
 			.encoding("Windows-31J")
 			.append(false)
 			.delimited()
-			.delimiter(",")
-			.fieldExtractor(fieldExtractor)
+			.fieldExtractor(new OutputFileColumnFieldExtractor<>(NyusyukkinData.class))
 			.build();
 	}
 

@@ -36,7 +36,6 @@ public class ResetNyusyukkinTasklet implements Tasklet {
 		// Random generator for data creation
 		Random random = new Random();
 
-
 		// Clear existing records from the deposit/withdrawal table
 		this.nyusyukkinMapper.deleteNyusyukkinData();
 
