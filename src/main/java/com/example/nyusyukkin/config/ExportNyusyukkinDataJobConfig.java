@@ -60,6 +60,7 @@ public class ExportNyusyukkinDataJobConfig {
 			.encoding("Windows-31J")
 			.append(false)
 			.delimited()
+			.delimiter(",")
 			.fieldExtractor(new OutputFileColumnFieldExtractor<>(NyusyukkinData.class))
 			.build();
 	}
