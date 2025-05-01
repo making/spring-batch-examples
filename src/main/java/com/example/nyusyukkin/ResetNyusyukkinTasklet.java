@@ -12,6 +12,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,16 +23,19 @@ public class ResetNyusyukkinTasklet implements Tasklet {
 
 	private final NyusyukkinMapper nyusyukkinMapper;
 
-	public ResetNyusyukkinTasklet(NyusyukkinMapper nyusyukkinMapper) {
+	private final int maxNumber;
+
+	public ResetNyusyukkinTasklet(NyusyukkinMapper nyusyukkinMapper,
+			@Value("#{jobParameters['maxNumber'] ?: 100}") int maxNumber) {
 		this.nyusyukkinMapper = nyusyukkinMapper;
+		this.maxNumber = maxNumber;
 	}
 
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 		logger.info("Nyusyukkin tasklet started");
 		// Number of rows to create in the DB. Default is 100.
-		int maxNumber = 1000;
-		List<NyusyukkinData> dataList = new ArrayList<>(maxNumber);
+		List<NyusyukkinData> dataList = new ArrayList<>(this.maxNumber);
 
 		// Random generator for data creation
 		Random random = new Random();
