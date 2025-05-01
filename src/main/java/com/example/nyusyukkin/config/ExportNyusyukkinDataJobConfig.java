@@ -1,6 +1,6 @@
 package com.example.nyusyukkin.config;
 
-import com.example.batch.file.OutputFileColumnFieldExtractor;
+import com.example.batch.file.OutputFileColumnLineAggregator;
 import com.example.nyusyukkin.NyusyukkinClassifier;
 import com.example.nyusyukkin.NyusyukkinData;
 import com.example.nyusyukkin.NyusyukkinMapper;
@@ -45,9 +45,7 @@ public class ExportNyusyukkinDataJobConfig {
 			.resource(new FileSystemResource("outputFile/SMP001_output_nyukin.csv"))
 			.encoding("Windows-31J")
 			.append(false)
-			.delimited()
-			.delimiter(",")
-			.fieldExtractor(new OutputFileColumnFieldExtractor<>(NyusyukkinData.class))
+			.lineAggregator(new OutputFileColumnLineAggregator<>(NyusyukkinData.class, ","))
 			.build();
 	}
 
@@ -59,9 +57,7 @@ public class ExportNyusyukkinDataJobConfig {
 			.resource(new FileSystemResource("outputFile/SMP001_output_syukkin.csv"))
 			.encoding("Windows-31J")
 			.append(false)
-			.delimited()
-			.delimiter(",")
-			.fieldExtractor(new OutputFileColumnFieldExtractor<>(NyusyukkinData.class))
+			.lineAggregator(new OutputFileColumnLineAggregator<>(NyusyukkinData.class, ","))
 			.build();
 	}
 

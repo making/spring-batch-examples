@@ -5,8 +5,6 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,24 +13,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Test class for OutputFileColumnFieldExtractor Tests various scenarios for field
+ * Test class for OutputFileColumnLineAggregator Tests various scenarios for field
  * extraction based on OutputFileColumn annotation
  */
-class OutputFileColumnFieldExtractorTest {
+class OutputFileColumnLineAggregatorTest {
 
-	private OutputFileColumnFieldExtractor<TestPerson> extractor;
+	private OutputFileColumnLineAggregator<TestPerson> aggregator;
 
 	private TestPerson person;
-
-	private SimpleDateFormat dateFormat;
 
 	@BeforeEach
 	void setUp() throws Exception {
 		// Initialize the extractor with our test class
-		extractor = new OutputFileColumnFieldExtractor<>(TestPerson.class);
+		aggregator = new OutputFileColumnLineAggregator<>(TestPerson.class);
 
 		// Initialize date formatter
-		dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
 
 		// Create test person with sample data
 		person = new TestPerson();
@@ -47,85 +43,21 @@ class OutputFileColumnFieldExtractorTest {
 	}
 
 	@Test
-	@DisplayName("Should extract fields in the correct order based on columnIndex")
-	void shouldExtractFieldsInCorrectOrder() {
+	@DisplayName("Should aggregate fields in the correct order based on columnIndex")
+	void shouldAggregateFieldsInCorrectOrder() {
 		// When
-		Object[] values = extractor.extract(person);
-
+		String line = aggregator.aggregate(person);
 		// Then
-		assertThat(values.length).isEqualTo(8);
-		// Fields should be ordered by columnIndex, not declaration order
-		assertThat(values[0]).isEqualTo(person.getFirstName());
-		assertThat(values[1]).isEqualTo("\"" + person.getLastName() + "\""); // Should be
-		// enclosed
-		// in
-		// double
-		// quotes
-		assertThat(values[2]).isEqualTo("1990/01/15"); // Should be formatted
+		assertThat(line).isEqualTo("John,\"Doe, Jr.\",1990/01/15,'75,000.50',0000000123,TEST,test,trimmed");
 	}
 
 	@Test
-	@DisplayName("Should apply column enclosing characters correctly")
-	void shouldApplyColumnEnclosingCharacters() {
+	@DisplayName("Should aggregate fields in the correct order based on columnIndex with different delimiter")
+	void shouldAggregateFieldsInCorrectOrderWithDifferentDelimiter() {
 		// When
-		Object[] values = extractor.extract(person);
-
+		String line = new OutputFileColumnLineAggregator<>(TestPerson.class, "\t").aggregate(person);
 		// Then
-		// Field with double quote enclosing
-		assertThat(values[1]).isEqualTo("\"Doe, Jr.\"");
-
-		// Field with single quote enclosing
-		assertThat(values[3]).isEqualTo("'75,000.50'");
-	}
-
-	@Test
-	@DisplayName("Should format date and number fields correctly")
-	void shouldFormatDateAndNumberFieldsCorrectly() {
-		// When
-		Object[] values = extractor.extract(person);
-
-		// Then
-		// Date field formatting
-		assertThat(values[2]).isEqualTo("1990/01/15");
-
-		// Number field formatting
-		assertThat(values[3]).isEqualTo("'75,000.50'");
-	}
-
-	@Test
-	@DisplayName("Should apply padding correctly")
-	void shouldApplyPaddingCorrectly() {
-		// When
-		Object[] values = extractor.extract(person);
-
-		// Then
-		// Left padding (right-aligned)
-		assertThat(values[4]).isEqualTo("0000000123");
-	}
-
-	@Test
-	@DisplayName("Should apply string conversion correctly")
-	void shouldApplyStringConversionCorrectly() {
-		// When
-		Object[] values = extractor.extract(person);
-
-		// Then
-		// Uppercase conversion
-		assertThat(values[5]).isEqualTo("TEST");
-
-		// Lowercase conversion
-		assertThat(values[6]).isEqualTo("test");
-	}
-
-	@Test
-	@DisplayName("Should apply trimming correctly")
-	void shouldApplyTrimmingCorrectly() {
-		// When
-		Object[] values = extractor.extract(person);
-
-		// Then
-		// Trimming whitespace from both sides
-		assertThat(values[7]).isEqualTo("trimmed");
+		assertThat(line).isEqualTo("John\t\"Doe, Jr.\"\t1990/01/15\t'75,000.50'\t0000000123\tTEST\ttest\ttrimmed");
 	}
 
 	@Test
@@ -134,23 +66,19 @@ class OutputFileColumnFieldExtractorTest {
 		// Given
 		person.setFirstName(null);
 		person.setSalary(null);
-
 		// When
-		Object[] values = extractor.extract(person);
-
+		String line = aggregator.aggregate(person);
 		// Then
-		assertThat(values[0]).isNull();
-		assertThat(values[3]).isEqualTo("''");
+		assertThat(line).isEqualTo(",\"Doe, Jr.\",1990/01/15,'',0000000123,TEST,test,trimmed");
 	}
 
 	@Test
 	@DisplayName("Should throw exception when duplicate columnIndex is detected")
 	void shouldThrowExceptionForDuplicateColumnIndex() {
 		// When/Then
-		assertThatThrownBy(() -> {
-			OutputFileColumnFieldExtractor<InvalidPerson> invalidExtractor = new OutputFileColumnFieldExtractor<>(
-					InvalidPerson.class);
-		}).isInstanceOf(IllegalStateException.class).hasMessageContaining("Duplicate columnIndex");
+		assertThatThrownBy(() -> new OutputFileColumnLineAggregator<>(InvalidPerson.class))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("Duplicate columnIndex");
 	}
 
 	@Test
@@ -162,10 +90,9 @@ class OutputFileColumnFieldExtractorTest {
 		dto.setSyukkinNum(4);
 		dto.setNyukinSum(662349);
 		dto.setSyukkinSum(2643052);
-		var fieldExtractor = new OutputFileColumnFieldExtractor<>(NyusyukkinFileOutput.class);
-		String line = Stream.of(fieldExtractor.extract(dto))
-			.map(x -> x == null ? "" : x.toString())
-			.collect(Collectors.joining(","));
+
+		var aggr = new OutputFileColumnLineAggregator<>(NyusyukkinFileOutput.class);
+		String line = aggr.aggregate(dto);
 		assertThat(line).isEqualTo("20111001,東京,2,4,662349,2643052");
 	}
 

@@ -6,43 +6,33 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
-import org.springframework.batch.item.file.transform.FieldExtractor;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import org.springframework.batch.item.file.transform.LineAggregator;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.format.datetime.DateFormatter;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
-/**
- * A custom FieldExtractor that uses the OutputFileColumn annotation to control how fields
- * are extracted and formatted for output.
- *
- * This extractor supports various formatting options defined in the annotation: - Column
- * order via columnIndex - Formatting for Date and BigDecimal via columnFormat - Padding
- * with specific characters - String conversion (uppercase/lowercase) - Trimming - Custom
- * enclosing characters per column
- *
- * @param <T> the type of object to extract fields from
- */
-public class OutputFileColumnFieldExtractor<T> implements FieldExtractor<T> {
+public class OutputFileColumnLineAggregator<T> implements LineAggregator<T> {
 
 	private final BeanWrapperImpl beanWrapper;
 
 	private final Field[] annotatedFields;
 
-	private final Map<Field, OutputFileColumn> fieldAnnotations;
+	private final Map<Field, OutputFileColumn> fieldAnnotations = new ConcurrentHashMap<>();
 
-	/**
-	 * Constructor that accepts the target type class.
-	 * @param targetType The class type of objects to extract fields from
-	 */
-	public OutputFileColumnFieldExtractor(Class<T> targetType) {
+	private final String delimiter;
+
+	public OutputFileColumnLineAggregator(Class<T> targetType) {
+		this(targetType, ",");
+	}
+
+	public OutputFileColumnLineAggregator(Class<T> targetType, String delimiter) {
 		this.beanWrapper = new BeanWrapperImpl();
-		this.fieldAnnotations = new HashMap<>();
-
 		// Initializes the extractor by finding and sorting all fields with the
 		// OutputFileColumn annotation by their columnIndex.
 
@@ -81,6 +71,12 @@ public class OutputFileColumnFieldExtractor<T> implements FieldExtractor<T> {
 				}
 			}
 		}
+		this.delimiter = delimiter;
+	}
+
+	@Override
+	public String aggregate(T item) {
+		return Arrays.stream(extract(item)).map(x -> Objects.toString(x, "")).collect(Collectors.joining(delimiter));
 	}
 
 	/**
@@ -89,8 +85,7 @@ public class OutputFileColumnFieldExtractor<T> implements FieldExtractor<T> {
 	 * @param item The object to extract field values from
 	 * @return An array of field values in the order specified by columnIndex
 	 */
-	@Override
-	public Object[] extract(T item) {
+	protected Object[] extract(T item) {
 		beanWrapper.setWrappedInstance(item);
 		Object[] values = new Object[annotatedFields.length];
 
